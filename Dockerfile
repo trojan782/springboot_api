@@ -12,11 +12,11 @@ COPY src src
 # execute permission to gradlew
 RUN chmod +x gradlew
 
-RUN ./gradlew build -x test
+RUN ./gradlew bootJar
 
 # runtime image
 
-FROM eclipse-temurine:17-jre
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
