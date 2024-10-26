@@ -2,7 +2,7 @@ image: gradle:8.5-jdk17
 
 variables:
   DOCKER_IMAGE: trojancodes/springboot_api
-  VERSION: ${CI_COMMIT_TAG:-${CI_COMMIT_SHA:0:8}}
+  VERSION: $CI_COMMIT_SHORT_SHA
   GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
 cache:
