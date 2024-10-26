@@ -38,9 +38,12 @@ test:
 
 package:
   stage: package
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  before_script:
+    - docker info
   script:
-    # Build the application
-    - gradle bootJar
     # Login to Docker Hub
     - echo ${DOCKERHUB_PASSWORD} | docker login -u ${DOCKERHUB_USERNAME} --password-stdin
     # Build and push Docker image
