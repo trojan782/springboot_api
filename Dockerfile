@@ -1,25 +1,39 @@
-FROM eclipse-temurin:17-jdk as builder
+# Build stage
+FROM eclipse-temurin:17-jdk-jammy AS builder
 
 WORKDIR /app
 
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
+# Copy only the files needed for dependency resolution first
+COPY gradle/ gradle/
+COPY gradlew build.gradle settings.gradle ./
 
-COPY src src
+# Download dependencies - this layer will be cached if dependencies don't change
+RUN chmod +x gradlew && \
+    ./gradlew dependencies --no-daemon
 
-# execute permission to gradlew
-RUN chmod +x gradlew
+# Copy source code
+COPY src/ src/
 
-RUN ./gradlew bootJar
+# Build the application
+RUN ./gradlew bootJar --no-daemon
 
-# runtime image
-
-FROM eclipse-temurin:17-jre
+# Runtime stage
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
+# Add a non-root user
+RUN addgroup --system --gid 1001 appuser && \
+    adduser --system --uid 1001 --group appuser
+
+# Copy the jar from builder stage
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Configure container
+USER appuser
+EXPOSE 8080
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=85.0 -Xms64m"
+
+
+# Run the application with proper memory settings
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -jar app.jar" ]
